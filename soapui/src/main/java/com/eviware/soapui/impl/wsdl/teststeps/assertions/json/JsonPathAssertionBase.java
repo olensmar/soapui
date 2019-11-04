@@ -139,7 +139,15 @@ public abstract class JsonPathAssertionBase extends XPathContainsAssertion {
 
     protected String readStringValue(String assertableContent, String expandedPath) {
         Object result = new JsonPathFacade(assertableContent).readObjectValue(expandedPath);
-        return result == null ? null : result.toString();
+        if( result != null ){
+            String value = result.toString();
+            if( value.length() > 1 && value.charAt(0) == '"' && value.charAt(value.length()-1)== '"'){
+                value = value.substring(1,value.length()-1);
+            }
+
+            return value;
+        }
+        return String.valueOf(result);
     }
 
     public static class JsonAssertionFactory extends AbstractTestAssertionFactory {

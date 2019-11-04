@@ -393,6 +393,33 @@
       ],
       "additionalProperties": false
     },
+    "JsonPathRegExAssertion": {
+      "type": "object",
+      "title": "JsonPath RegEx Assertion",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "JsonPath RegEx"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "jsonPath": {
+          "type": "string"
+        },
+        "regEx": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "jsonPath",
+        "expectedContent"
+      ],
+      "additionalProperties": false
+    },
     "JsonPathCountAssertion": {
       "type": "object",
       "title": "JsonPath Count Assertion",

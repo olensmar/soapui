@@ -68,6 +68,8 @@ public class AssertionTypeResolver implements TypeIdResolver {
                 return typeFactory.constructSpecializedType(baseType, XQueryContainsAssertionStruct.class);
             case JsonPathContentAssertion.LABEL:
                 return typeFactory.constructSpecializedType(baseType, JsonPathContentAssertionStruct.class);
+            case JsonPathRegExAssertion.LABEL:
+                return typeFactory.constructSpecializedType(baseType, JsonPathRegExAssertionStruct.class);
             case JsonPathExistenceAssertion.LABEL:
                 return typeFactory.constructSpecializedType(baseType, JsonPathExistenceAssertionStruct.class);
             case JsonPathCountAssertion.LABEL:
