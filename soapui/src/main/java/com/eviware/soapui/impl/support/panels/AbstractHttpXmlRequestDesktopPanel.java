@@ -30,12 +30,14 @@ import com.eviware.soapui.support.JsonUtil;
 import com.eviware.soapui.support.StringUtils;
 import com.eviware.soapui.support.editor.xml.support.AbstractXmlDocument;
 import com.eviware.soapui.support.xml.XmlUtils;
-import net.sf.json.JSON;
-import net.sf.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import javax.annotation.Nonnull;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
+import java.util.Iterator;
 
 import static com.eviware.soapui.support.JsonUtil.seemsToBeJsonContentType;
 
@@ -103,36 +105,52 @@ public abstract class AbstractHttpXmlRequestDesktopPanel<T extends ModelItem, T2
                 try {
                     String contentAsString = documentContent.getContentAsString();
                     if (seemsToBeJsonContentType(getRequest().getMediaType()) && XmlUtils.seemsToBeXml(contentAsString)) {
-                        JSON json = new JsonXmlSerializer().read(contentAsString);
+                        JsonNode json = new JsonXmlSerializer().read(contentAsString);
                         processNullsAndEmptyValuesIn(json);
-                        request.setRequestContent(json.toString(3, 0));
+                        request.setRequestContent(json.toString());
                     } else {
                         request.setRequestContent(contentAsString);
                     }
+                }
+                catch( IOException e ){
+                    SoapUI.logError(e);
                 } finally {
                     updating = false;
                 }
             }
         }
 
-        private void processNullsAndEmptyValuesIn(JSON json) {
+        private void processNullsAndEmptyValuesIn(JsonNode json) {
             String requestContent = request.getRequestContent();
             if (!StringUtils.hasContent(requestContent)) {
                 return;
             }
             try {
-                JSON oldJson = new JsonUtil().parseTrimmedText(requestContent);
-                if (!(json instanceof JSONObject) || !(oldJson instanceof JSONObject)) {
+                JsonNode oldJson = new JsonUtil().parseTrimmedText(requestContent);
+                if (!(json instanceof ObjectNode) || !(oldJson instanceof ObjectNode)) {
                     return;
                 }
-                overwriteNullValues((JSONObject) json, (JSONObject) oldJson);
+                overwriteNullValues((ObjectNode) json, (ObjectNode) oldJson);
             } catch (Exception e) {
                 SoapUI.logError(e, "Unexpected error while parsing JSON");
             }
         }
 
-        private void overwriteNullValues(JSONObject json, JSONObject oldJson) {
-            for (Object key : json.keySet()) {
+        private void overwriteNullValues(ObjectNode json, ObjectNode oldJson) {
+
+            for( Iterator<String> i = json.fieldNames(); i.hasNext(); ){
+                String name = i.next();
+                Object value = json.get( name );
+                Object oldValue = oldJson.get( name );
+
+                if (isNullValue(value) && isEmptyJson(oldValue)) {
+                    json.set(name, oldJson.get(name));
+                } else if (isEmptyJson(value) && oldValue instanceof String) {
+                    json.put(name, "");
+                }
+            }
+            /*
+            for (Object key : json.fieldNames()) {
                 Object value = json.get(key);
                 Object oldValue = oldJson.get(key);
                 if (isNullValue(value) && isEmptyJson(oldValue)) {
@@ -145,11 +163,11 @@ public abstract class AbstractHttpXmlRequestDesktopPanel<T extends ModelItem, T2
                 {
 					overwriteNullValues( (JSONObject) value, (JSONObject) oldJson.get(key) );
 				}*/
-            }
+            //}
         }
 
-        private boolean isEmptyJson(Object oldValue) {
-            return oldValue != null && oldValue instanceof JSON && ((JSON) oldValue).isEmpty();
+        private boolean isEmptyJson(Object value) {
+            return value != null && value instanceof JsonNode && ((JsonNode) value).isMissingNode();
         }
 
         private boolean isNullValue(Object value) {

@@ -1,17 +1,17 @@
 /*
  * SoapUI, Copyright (C) 2004-2019 SmartBear Software
  *
- * Licensed under the EUPL, Version 1.1 or - as soon as they will be approved by the European Commission - subsequent 
- * versions of the EUPL (the "Licence"); 
- * You may not use this work except in compliance with the Licence. 
- * You may obtain a copy of the Licence at: 
- * 
- * http://ec.europa.eu/idabc/eupl 
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the Licence is 
- * distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either 
- * express or implied. See the Licence for the specific language governing permissions and limitations 
- * under the Licence. 
+ * Licensed under the EUPL, Version 1.1 or - as soon as they will be approved by the European Commission - subsequent
+ * versions of the EUPL (the "Licence");
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ *
+ * http://ec.europa.eu/idabc/eupl
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the Licence for the specific language governing permissions and limitations
+ * under the Licence.
  */
 
 package com.eviware.soapui.support.xml;
@@ -67,14 +67,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.*;
 
 /**
  * General XML-related utilities
@@ -82,6 +75,8 @@ import java.util.StringTokenizer;
 
 @SuppressWarnings("deprecation")
 public final class XmlUtils {
+    public static final String EMPTY_XML = "<xml/>";
+
     private static DocumentBuilder documentBuilder;
     private final static Logger log = Logger.getLogger(XmlUtils.class);
 
@@ -1211,6 +1206,36 @@ public final class XmlUtils {
         }
 
         return result.toArray(new Node[result.size()]);
+    }
+
+    /**
+     * Strip non valid characters according to XML 1.0
+     *
+     * @param xml              string with non valid characters
+     * @param invalidCharsList map with the positions of incorrect characters and their values
+     * @return string with valid characters
+     */
+    public static String stripNonValidXMLCharacters(String xml, Map<Integer, Character> invalidCharsList) {
+        StringBuilder out = new StringBuilder();
+        char current;
+
+        if (StringUtils.isNullOrEmpty(xml)) {
+            return "";
+        }
+        for (int i = 0; i < xml.length(); i++) {
+            current = xml.charAt(i);
+            if ((current == 0x9) ||
+                    (current == 0xA) ||
+                    (current == 0xD) ||
+                    ((current >= 0x20) && (current <= 0xD7FF)) ||
+                    ((current >= 0xE000) && (current <= 0xFFFD)) ||
+                    ((current >= 0x10000) && (current <= 0x10FFFF))) {
+                out.append(current);
+            } else {
+                invalidCharsList.put(i, current);
+            }
+        }
+        return out.toString();
     }
 
     private final static class ElementNodeList implements NodeList {

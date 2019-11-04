@@ -18,6 +18,7 @@ package com.eviware.soapui.support;
 
 import com.eviware.soapui.support.types.StringList;
 
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -412,5 +413,25 @@ public class StringUtils {
      */
     public static String getSubstringBeforeFirstWhitespace(String originalString) {
         return originalString.split("\\s+")[0];
+    }
+
+    /**
+     * Null safe method that checks if provided strings are equal to each other
+     *
+     * @param str1 The first word to compare
+     * @param str2 The second word to compare
+     * @return {@code true} if both of the arguments are nullable or they are equal to each other considering case;
+     * {@code false} otherwise
+     */
+    public static boolean sameString(@Nullable String str1, @Nullable String str2) {
+        boolean str1Empty = StringUtils.isNullOrEmpty(str1);
+        boolean str2Empty = StringUtils.isNullOrEmpty(str2);
+        if (str1Empty && str2Empty) {
+            return true;
+        } else if (str1Empty) {
+            return false;
+        } else {
+            return str1.equals(str2);
+        }
     }
 }

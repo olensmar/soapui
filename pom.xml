@@ -55,6 +55,7 @@
         <maven-gitlog-plugin-version>1.9.1</maven-gitlog-plugin-version>
 
         <requireMavenVersion-value>3.0.5</requireMavenVersion-value>
+        <jackson.version>2.9.8</jackson.version>
     </properties>
 
     <modules>

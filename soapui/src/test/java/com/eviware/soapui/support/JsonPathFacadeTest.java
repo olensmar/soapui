@@ -16,6 +16,7 @@
 
 package com.eviware.soapui.support;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.jayway.jsonpath.JsonPath;
 import org.junit.Test;
 
@@ -42,8 +43,8 @@ public class JsonPathFacadeTest {
 
     @Test
     public void simpleObjectReadWorks() throws Exception {
-        List arrayElements = new JsonPathFacade(SIMPLE_JSON).readObjectValue("$.children");
-        assertThat(arrayElements, is(aCollectionWithSize(2)));
+        JsonNode arrayElements = new JsonPathFacade(SIMPLE_JSON).readObjectValue("$.children");
+        assertThat(arrayElements.size(), is(2));
     }
 
     @Test

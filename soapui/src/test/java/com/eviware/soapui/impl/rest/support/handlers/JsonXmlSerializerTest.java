@@ -17,7 +17,7 @@
 package com.eviware.soapui.impl.rest.support.handlers;
 
 import com.eviware.soapui.support.JsonUtil;
-import net.sf.json.JSON;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,21 +35,21 @@ public class JsonXmlSerializerTest {
 
     @Test
     public void serializesJsonWithVanillaNames() throws Exception {
-        JSON parse = new JsonUtil().parseTrimmedText("{ name: 'Barack', surname: 'Obama', profession: 'president'}");
+        JsonNode parse = new JsonUtil().parseTrimmedText("{ name: 'Barack', surname: 'Obama', profession: 'president'}");
 
-        assertThat(serializer.write(parse), is("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<o>" +
+        assertThat(serializer.write(parse), is("<?xml version='1.0' encoding='UTF-8'?><o>" +
                 "<name type=\"string\">Barack</name>" +
-                "<profession type=\"string\">president</profession>" +
                 "<surname type=\"string\">Obama</surname>" +
-                "</o>\r\n"));
+                "<profession type=\"string\">president</profession>" +
+                "</o>"));
     }
 
     @Test
     public void serializesJsonWithDollarSign() throws Exception {
-        JSON parse = new JsonUtil().parseTrimmedText("{ $: 'value' }");
+        JsonNode parse = new JsonUtil().parseTrimmedText("{ $: 'value' }");
 
-        assertThat(serializer.write(parse), is("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<o>" +
+        assertThat(serializer.write(parse), is("<?xml version='1.0' encoding='UTF-8'?><o>" +
                 "<_ type=\"string\">value</_>" +
-                "</o>\r\n"));
+                "</o>"));
     }
 }

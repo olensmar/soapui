@@ -12,6 +12,7 @@ import com.eviware.soapui.impl.wsdl.teststeps.assertions.jdbc.JdbcTimeoutAsserti
 import com.eviware.soapui.impl.wsdl.teststeps.assertions.json.JsonPathContentAssertion;
 import com.eviware.soapui.impl.wsdl.teststeps.assertions.json.JsonPathCountAssertion;
 import com.eviware.soapui.impl.wsdl.teststeps.assertions.json.JsonPathExistenceAssertion;
+import com.eviware.soapui.impl.wsdl.teststeps.assertions.json.JsonPathRegExAssertion;
 import com.eviware.soapui.impl.wsdl.teststeps.assertions.soap.NotSoapFaultAssertion;
 import com.eviware.soapui.impl.wsdl.teststeps.assertions.soap.SoapFaultAssertion;
 import com.eviware.soapui.security.assertion.InvalidHttpStatusCodesAssertion;
