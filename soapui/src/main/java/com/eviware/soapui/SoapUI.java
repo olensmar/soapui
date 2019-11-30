@@ -296,9 +296,10 @@ public class SoapUI {
         try {
             Platform.setImplicitExit(false);
         } catch (NoClassDefFoundError e) {
-            log.warn("Could not find jfxrt.jar. Internal browser will be disabled.");
-            System.setProperty(BROWSER_DISABLED_SYSTEM_PROPERTY, Boolean.TRUE.toString());
-        }
+            if( !Boolean.TRUE.toString().equals(System.getProperty(BROWSER_DISABLED_SYSTEM_PROPERTY))){
+                log.warn("Could not find jfxrt.jar. Internal browser will be disabled.");
+                System.setProperty(BROWSER_DISABLED_SYSTEM_PROPERTY, Boolean.TRUE.toString());
+            }        }
     }
 
     // --------------------------- CONSTRUCTORS ---------------------------
