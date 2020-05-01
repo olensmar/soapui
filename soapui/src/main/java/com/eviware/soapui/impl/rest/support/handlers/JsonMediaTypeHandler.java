@@ -1,17 +1,17 @@
 /*
- * SoapUI, Copyright (C) 2004-2019 SmartBear Software
+ * Copyright 2004-2019 SmartBear Software
  *
- * Licensed under the EUPL, Version 1.1 or - as soon as they will be approved by the European Commission - subsequent 
- * versions of the EUPL (the "Licence"); 
- * You may not use this work except in compliance with the Licence. 
- * You may obtain a copy of the Licence at: 
- * 
- * http://ec.europa.eu/idabc/eupl 
- * 
- * Unless required by applicable law or agreed to in writing, software distributed under the Licence is 
- * distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either 
- * express or implied. See the Licence for the specific language governing permissions and limitations 
- * under the Licence. 
+ * Licensed under the EUPL, Version 1.1 or - as soon as they will be approved by the European Commission - subsequent
+ * versions of the EUPL (the "Licence");
+ * You may not use this work except in compliance with the Licence.
+ * You may obtain a copy of the Licence at:
+ *
+ * http://ec.europa.eu/idabc/eupl
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the Licence is
+ * distributed on an "AS IS" basis, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the Licence for the specific language governing permissions and limitations
+ * under the Licence.
  */
 
 package com.eviware.soapui.impl.rest.support.handlers;
@@ -20,19 +20,20 @@ import com.eviware.soapui.SoapUI;
 import com.eviware.soapui.config.AbstractRequestConfig;
 import com.eviware.soapui.impl.rest.RestRequest;
 import com.eviware.soapui.impl.rest.support.MediaTypeHandler;
-import com.eviware.soapui.impl.support.AbstractHttpRequestInterface;
 import com.eviware.soapui.impl.support.HttpUtils;
 import com.eviware.soapui.impl.wsdl.submit.transports.http.HttpResponse;
+import com.eviware.soapui.model.iface.Request;
 import com.eviware.soapui.model.iface.TypedContent;
 import com.eviware.soapui.support.JsonUtil;
 import com.eviware.soapui.support.StringUtils;
 import com.eviware.soapui.support.xml.XmlUtils;
-import net.sf.json.JSON;
-import net.sf.json.JSONException;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.net.URL;
 
 public class JsonMediaTypeHandler implements MediaTypeHandler {
+    private static final String SINGLE_SLASH = "/";
+    private static final String DOUBLE_SLASH = "//";
 
     public boolean canHandle(String contentType) {
         return JsonUtil.seemsToBeJsonContentType(contentType);
@@ -40,69 +41,55 @@ public class JsonMediaTypeHandler implements MediaTypeHandler {
 
     @Override
     public String createXmlRepresentation(HttpResponse response) {
-        try {
-            if (response == null || response.getContentAsString() == null) {
-                return null;
-            }
-            String content = response.getContentAsString().trim();
-            if (!StringUtils.hasContent(content)) {
-                return null;
-            }
-            // remove nulls - workaround for bug in xmlserializer!?
-            content = content.replaceAll("\\\\u0000", "");
-            JSON json = new JsonUtil().parseTrimmedText(content);
-            JsonXmlSerializer serializer = new JsonXmlSerializer();
-            serializer.setTypeHintsEnabled(false);
-            serializer.setRootName(HttpUtils.isErrorStatus(response.getStatusCode()) ? "Fault" : "Response");
-            URL url = response.getURL();
-            String originalUri = readOriginalUriFrom(response.getRequest());
-            String namespaceUri = originalUri != null ? originalUri : makeNamespaceUriFrom(url);
-            serializer.setNamespace("", namespaceUri);
-            content = serializer.write(json);
-            content = XmlUtils.prettyPrintXml(content);
-
-            return content;
-        } catch (JSONException ignore) {
-            // if the content is not valid JSON, empty XML will be returned
-        } catch (Exception e) {
-            SoapUI.logError(e);
+        if (response == null) {
+            return null;
         }
-        return "<xml/>";
-
+        return createXmlRepresentation(
+                response,
+                HttpUtils.isErrorStatus(response.getStatusCode()) ? "Fault" : "Response",
+                createNamespaceUri(response));
     }
 
     public String createXmlRepresentation(TypedContent typedContent) {
+        return createXmlRepresentation(typedContent, "Response", "json");
+    }
+
+    public String createXmlRepresentation(TypedContent typedContent, String rootNodeName, String uri) {
         try {
-            String content = typedContent.getContentAsString().trim();
-            if (!StringUtils.hasContent(content)) {
+            if (typedContent == null) {
                 return null;
             }
-            // remove nulls - workaround for bug in xmlserializer!?
-            content = content.replaceAll("\\\\u0000", "");
-            JSON json = new JsonUtil().parseTrimmedText(content);
-            JsonXmlSerializer serializer = new JsonXmlSerializer();
-            serializer.setTypeHintsEnabled(false);
-            serializer.setRootName("Response");
-            serializer.setNamespace("", "json");
-            content = serializer.write(json);
-            content = XmlUtils.prettyPrintXml(content);
+            String content = typedContent.getContentAsString();
+            if (StringUtils.isNullOrEmpty(content)) {
+                return null;
+            }
+            content = content.trim();
+            JsonXmlSerializer serializer = createJsonXmlSerializer();
 
-            return content;
-        } catch (JSONException ignore) {
-            // if the content is not valid JSON, empty XML will be returned
+            serializer.setRootName(rootNodeName);
+            serializer.setNamespace("", uri);
+
+            return XmlUtils.prettyPrintXml(serializer.write(createJsonObject(content)));
         } catch (Exception e) {
-            SoapUI.logError(e);
+            SoapUI.logError( e );
         }
         return "<xml/>";
     }
 
-    private String readOriginalUriFrom(AbstractHttpRequestInterface<?> request) {
+    public static String readOriginalUriFrom(Request request) {
         if (request instanceof RestRequest) {
             AbstractRequestConfig config = ((RestRequest) request).getConfig();
             String originalUri = config.getOriginalUri();
             // if URI contains unexpanded template parameters
-            if (originalUri != null && originalUri.contains("{")) {
-                return null;
+            if (StringUtils.hasContent(originalUri)) {
+                if (originalUri.contains("{")) {
+                    return null;
+                }
+                int count = org.apache.commons.lang.StringUtils.countMatches(originalUri, DOUBLE_SLASH);
+                if (count > 1) {
+                    originalUri = originalUri.replaceAll("(?!(?<=http(|s):))" + DOUBLE_SLASH, SINGLE_SLASH);
+                    config.setOriginalUri(originalUri);
+                }
             }
             return originalUri;
         } else {
@@ -110,7 +97,26 @@ public class JsonMediaTypeHandler implements MediaTypeHandler {
         }
     }
 
+    private static JsonXmlSerializer createJsonXmlSerializer() {
+        JsonXmlSerializer serializer = new JsonXmlSerializer();
+        serializer.setTypeHintsEnabled(false);
+        return serializer;
+    }
+
+    private static String createNamespaceUri(HttpResponse response) {
+        URL url = response.getURL();
+        String originalUri = readOriginalUriFrom(response.getRequest());
+        return originalUri != null ? originalUri : makeNamespaceUriFrom(url);
+    }
+
+    public static JsonNode createJsonObject(String content) {
+        // remove nulls - workaround for bug in xmlserializer!?
+        content = content.replaceAll("\\\\u0000", "");
+        return JsonUtil.getValidJson(content);
+    }
+
     public static String makeNamespaceUriFrom(URL url) {
-        return url.getProtocol() + "://" + url.getHost() + url.getPath();
+        String path = url.getPath().replace(DOUBLE_SLASH, SINGLE_SLASH);
+        return url.getProtocol() + ":" + DOUBLE_SLASH + url.getHost() + path;
     }
 }

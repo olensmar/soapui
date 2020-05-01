@@ -23,6 +23,7 @@ import com.eviware.soapui.model.iface.SubmitContext;
 import com.eviware.soapui.model.propertyexpansion.PropertyExpander;
 import com.eviware.soapui.model.propertyexpansion.PropertyExpansionContext;
 import com.eviware.soapui.model.testsuite.Assertable;
+import com.eviware.soapui.model.testsuite.AssertionError;
 import com.eviware.soapui.model.testsuite.AssertionException;
 import com.eviware.soapui.model.testsuite.RequestAssertion;
 import com.eviware.soapui.model.testsuite.ResponseAssertion;
@@ -151,8 +152,10 @@ public class JsonPathRegExAssertion extends JsonPathAssertionBase implements Req
             if (path == null) {
                 return "Missing path for JsonPath assertion";
             }
-            if (getExpectedContent() == null) {
-                return "Missing content for JsonPath assertion";
+
+            String expectedContent = getExpectedContent();
+            if( expectedContent == null ){
+                expectedContent = Boolean.TRUE.toString();
             }
 
             if (this.regularExpression == null) {
@@ -165,10 +168,11 @@ public class JsonPathRegExAssertion extends JsonPathAssertionBase implements Req
             if (result != null && result.matches(this.regularExpression)) {
                 actualValue = Boolean.TRUE;
             }
-            String expandedExpectedValue = PropertyExpander.expandProperties(context, getExpectedContent());
-            Assert.assertEquals(expandedExpectedValue, actualValue.toString());
+            String expandedExpectedValue = PropertyExpander.expandProperties(context, expectedContent );
+            Assert.assertEquals( "[" + result +"] did not match regex [" + regularExpression + "] at path [" + getPath() + "]",
+                    expandedExpectedValue, actualValue.toString());
         } catch (Throwable exception) {
-            throwAssertionException(getPath(), exception);
+            throw new AssertionException(new AssertionError(exception.getMessage()));
         }
         return type + " matches content for [" + path + "]";
     }

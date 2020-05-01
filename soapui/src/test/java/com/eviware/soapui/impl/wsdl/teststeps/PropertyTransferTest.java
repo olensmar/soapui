@@ -220,8 +220,8 @@ public class PropertyTransferTest {
     @Test
     public void supportsJsonPathInSource() throws Exception {
         sourceProperty.setValue("{ persons: [" +
-                "{ firstName: 'Anders', lastName: 'And' }," +
-                "{ firstName: 'Anders', lastName: 'And' }" +
+                "{ firstName: 'Anders', lastName: \"And\" }," +
+                "{ firstName: 'Anders', lastName: \"And\" }" +
                 "] }");
         transfer.setSourcePath("$.persons[0].firstName");
         transfer.setSourcePathLanguage(PathLanguage.JSONPATH);
@@ -247,6 +247,20 @@ public class PropertyTransferTest {
     }
 
     @Test
+    public void transfersJsonLength() throws Exception {
+        String newName = "New_Name";
+        sourceProperty.setValue("{ persons: [" +
+                "{ firstName: 'Anders', lastName: 'And' }," +
+                "{ firstName: 'Anders', lastName: 'And' }" +
+                "] }");
+        transfer.setSourcePath("$.persons.length()");
+        transfer.setSourcePathLanguage(PathLanguage.JSONPATH);
+        transfer.transferProperties(submitContext);
+
+        assertThat(targetProperty.getValue(), is("2"));
+    }
+
+    @Test
     public void transfersJsonNumberAsNumber() throws Exception {
         sourceProperty.setValue("{ numbers : [1, 2, 42]}");
         targetProperty.setValue("{ numbers : [1, 2, 3]}");
@@ -257,8 +271,9 @@ public class PropertyTransferTest {
         transfer.setTargetPathLanguage(PathLanguage.JSONPATH);
         transfer.transferProperties(submitContext);
 
-        Object insertedValue = new JsonPathFacade(targetProperty.getValue()).readObjectValue(path);
-        assertThat(insertedValue, is(aNumber()));
+        JsonPathFacade pathFacade = new JsonPathFacade(targetProperty.getValue());
+        Object insertedValue = pathFacade.readObjectValue(path);
+        assertThat(insertedValue.toString(), is("42"));
     }
 
     @Test
@@ -273,7 +288,8 @@ public class PropertyTransferTest {
         transfer.transferProperties(submitContext);
 
         Object insertedValue = new JsonPathFacade(targetProperty.getValue()).readObjectValue(path);
-        assertTrue("Expected a map object but got " + insertedValue, insertedValue instanceof Map);
+        assertThat( insertedValue.toString(), is( "{\"key1\":1,\"key2\":2}"));
+      //  assertTrue("Expected a map object but got " + insertedValue, insertedValue instanceof Map);
     }
 
     @Test

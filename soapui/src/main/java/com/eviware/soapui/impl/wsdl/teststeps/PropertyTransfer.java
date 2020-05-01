@@ -40,6 +40,7 @@ import com.eviware.soapui.support.resolver.DisablePropertyTransferResolver;
 import com.eviware.soapui.support.resolver.ResolveContext;
 import com.eviware.soapui.support.resolver.ResolveContext.PathToResolve;
 import com.eviware.soapui.support.xml.XmlUtils;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlCursor.TokenType;
@@ -405,7 +406,7 @@ public class PropertyTransfer implements PropertyChangeNotifier {
     }
 
     private String[] writeTargetValue(Object value, SubmitContext context) throws Exception {
-        String stringValue = value == null ? null : String.valueOf(value);
+        String stringValue = value == null ? null : value instanceof JsonNode ? ((JsonNode)value).asText() : String.valueOf(value);
         if (!hasTargetPath()) {
             getTargetProperty().setValue(stringValue);
         } else {

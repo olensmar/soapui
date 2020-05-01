@@ -16,6 +16,7 @@
 
 package com.eviware.soapui.impl.support.http;
 
+import com.eviware.soapui.SoapUI;
 import com.eviware.soapui.impl.rest.panels.resource.RestParamsTable;
 import com.eviware.soapui.impl.rest.panels.resource.RestParamsTableModel;
 import com.eviware.soapui.impl.rest.support.RestParamProperty;
@@ -32,7 +33,7 @@ import com.eviware.soapui.support.editor.views.AbstractXmlEditorView;
 import com.eviware.soapui.support.propertyexpansion.PropertyExpansionPopupListener;
 import com.eviware.soapui.support.xml.SyntaxEditorUtil;
 import com.eviware.soapui.support.xml.XmlUtils;
-import net.sf.json.JSON;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 
 import javax.swing.DefaultComboBoxModel;
@@ -51,6 +52,7 @@ import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.IOException;
 
 import static com.eviware.soapui.impl.rest.actions.support.NewRestResourceActionBase.ParamLocation;
 import static com.eviware.soapui.support.JsonUtil.seemsToBeJsonContentType;
@@ -224,8 +226,13 @@ public class HttpRequestContentView extends AbstractXmlEditorView<HttpRequestDoc
             String mediaType = (String) mediaTypeCombo.getSelectedItem();
             if (XmlUtils.seemsToBeXml(requestBodyAsXml) &&
                     seemsToBeJsonContentType(mediaType)) {
-                JSON jsonObject = new JsonXmlSerializer().read(requestBodyAsXml);
-                contentEditor.setText(jsonObject.toString(3, 0));
+                try {
+                    JsonNode jsonObject = new JsonXmlSerializer().read(requestBodyAsXml);
+                    contentEditor.setText(jsonObject.toString());
+                } catch (IOException e) {
+                    SoapUI.logError( e );
+                }
+
             } else {
                 contentEditor.setText(requestBodyAsXml);
             }

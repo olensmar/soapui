@@ -30,6 +30,7 @@ import com.eviware.soapui.model.testsuite.ResponseAssertion;
 import com.eviware.soapui.support.JsonPathFacade;
 import com.eviware.soapui.support.StringUtils;
 import com.eviware.soapui.support.UISupport;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import junit.framework.Assert;
 
 import javax.swing.JTextArea;
@@ -100,7 +101,10 @@ public class JsonPathCountAssertion extends JsonPathAssertionBase implements Req
 
     private Integer getResultSize(Object result) {
         Integer count = 0;
-        if (result instanceof List) {
+        if( result instanceof ArrayNode){
+            count = ((ArrayNode)result).size();
+        }
+        else if (result instanceof List) {
             count = ((List) result).size();
         } else if (result != null) {
             count = 1;

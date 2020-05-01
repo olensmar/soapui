@@ -25,7 +25,7 @@ import com.eviware.soapui.support.components.JXToolBar;
 import com.eviware.soapui.support.editor.views.AbstractXmlEditorView;
 import com.eviware.soapui.support.editor.xml.XmlEditor;
 import com.eviware.soapui.support.xml.SyntaxEditorUtil;
-import net.sf.json.JSON;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
@@ -101,11 +101,11 @@ public class JsonResponseMessageExchangeView extends AbstractXmlEditorView<HttpR
 
             if (JsonUtil.seemsToBeJsonContentType(me.getResponseHeaders().get("Content-Type", ""))) {
                 try {
-                    JSON json = new JsonUtil().parseTrimmedText(me.getResponseContent());
-                    if (json.isEmpty()) {
+                    JsonNode json = new JsonUtil().parseTrimmedText(me.getResponseContent());
+                    if (json.isMissingNode()) {
                         content = "<Empty JSON content>";
                     } else {
-                        content = json.toString(3);
+                        content = json.toString();
                     }
                 } catch (Throwable e) {
                     if (!"Invalid JSON String".equals(e.getMessage())) {

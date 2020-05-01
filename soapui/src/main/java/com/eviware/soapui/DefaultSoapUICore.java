@@ -488,8 +488,8 @@ public class DefaultSoapUICore implements SoapUICore {
             String logFileName = System.getProperty(SoapUISystemProperties.SOAPUI_LOG4j_CONFIG_FILE, "soapui-log4j.xml");
             File log4jconfig = root == null ? new File(logFileName) : new File(new File(getRoot()), logFileName);
             if (log4jconfig.exists()) {
-                System.out.println("Configuring log4j from [" + log4jconfig.getAbsolutePath() + "]");
                 DOMConfigurator.configureAndWatch(log4jconfig.getAbsolutePath(), 5000);
+                SoapUI.log("Configured log4j from [" + log4jconfig.getAbsolutePath() + "]");
             } else {
                 URL url = SoapUI.class.getResource("/com/eviware/soapui/resources/conf/soapui-log4j.xml");
                 if (url != null) {
